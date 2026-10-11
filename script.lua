@@ -1,9 +1,3 @@
--- VitaHub | DOORS (v1.0) - Russian / English (запускать через executor)
--- RightShift: скрыть / показать меню
--- Названия объектов Doors (CurrentRooms, ModulePrompt, LootPrompt, HidePrompt и т.д.)
--- взяты по памяти и в игре не проверялись. Если что-то не подсвечивается, пришли
--- название объекта из Explorer, поправлю.
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -15,7 +9,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 
--- ===== Палитра =====
 local ACCENT = Color3.fromRGB(139, 92, 246)
 local ACCENT2 = Color3.fromRGB(236, 72, 153)
 local TEXT = Color3.fromRGB(240, 240, 250)
@@ -23,7 +16,6 @@ local MUTED = Color3.fromRGB(170, 172, 200)
 local RED = Color3.fromRGB(220, 70, 90)
 local GOOD = Color3.fromRGB(52, 199, 120)
 
--- ===== Выбор языка / Language select =====
 local LANG
 do
     local selGui = Instance.new("ScreenGui")
@@ -200,7 +192,6 @@ local function T(key, ...)
     return str
 end
 
--- ===== Состояние =====
 local alive = true
 local connections = {}
 local function track(c) table.insert(connections, c) return c end
@@ -243,14 +234,12 @@ local function getHumanoid()
     return char and char:FindFirstChildOfClass("Humanoid")
 end
 
--- Анти-AFK
 track(player.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end))
 
--- ================= ESP =================
-local ESP = {}  -- ESP[категория][объект] = { hl = Highlight|nil, gui = BillboardGui }
+local ESP = {}
 
 local function anyPart(target)
     if target:IsA("BasePart") then return target end
@@ -338,7 +327,6 @@ local function niceName(name)
     return NICE[name] or name
 end
 
--- Сущности Doors по имени модели (нижний регистр)
 local function entityLabel(name)
     local n = name:lower()
     if n:find("^rush") then return "Rush" end
@@ -410,7 +398,6 @@ task.spawn(function()
     end
 end)
 
--- ================= Оповещение о сущностях =================
 track(Workspace.ChildAdded:Connect(function(c)
     if not state.alert then return end
     local lb = entityLabel(c.Name)
@@ -420,7 +407,6 @@ track(Workspace.ChildAdded:Connect(function(c)
     end
 end))
 
--- ================= Fullbright / без тумана =================
 local origLighting
 local function saveLighting()
     if origLighting then return end
@@ -454,7 +440,6 @@ track(RunService.Heartbeat:Connect(function()
     end
 end))
 
--- ================= Скорость =================
 track(RunService.Heartbeat:Connect(function()
     if state.speed then
         local hum = getHumanoid()
@@ -462,7 +447,6 @@ track(RunService.Heartbeat:Connect(function()
     end
 end))
 
--- ================= Авто-подбор и мгновенное взаимодействие =================
 local lootWarned = false
 task.spawn(function()
     while alive do
@@ -502,7 +486,6 @@ task.spawn(function()
     end
 end)
 
--- ================= Переключатели =================
 local function setFlag(name, value)
     state[name] = value
     refreshGui()
@@ -537,7 +520,6 @@ local function setSpeedIdx(i)
     refreshGui()
 end
 
--- ================= GUI: Liquid Glass =================
 local function buildGui()
     local gui = Instance.new("ScreenGui")
     gui.Name = "VitaHubDoorsGui"
@@ -622,7 +604,6 @@ local function buildGui()
     })
     sheenGrad.Parent = sheen
 
-    -- Перетаскивание. Сдвиг меньше 6px считается кликом.
     local function makeDraggable(handle, target, onClick)
         local dragging, moved = false, false
         local dragStart, startPos
@@ -656,7 +637,6 @@ local function buildGui()
         end))
     end
 
-    -- Шапка
     local header = Instance.new("Frame")
     header.Size = UDim2.new(1, 0, 0, 56)
     header.BackgroundTransparency = 1
@@ -732,7 +712,6 @@ local function buildGui()
     local roomLabel = infoPill(16, 170)
     local entityLbl = infoPill(194, W - 194 - 16)
 
-    -- Вкладки
     local sidebar = Instance.new("Frame")
     sidebar.Position = UDim2.new(0, 14, 0, 98)
     sidebar.Size = UDim2.new(0, 128, 0, H - 98 - 14)
@@ -830,7 +809,6 @@ local function buildGui()
         end
     end)
 
-    -- Элементы интерфейса
     local function sectionLabel(parent, text)
         local l = Instance.new("TextLabel")
         l.Size = UDim2.new(1, 0, 0, 16)
@@ -932,7 +910,6 @@ local function buildGui()
         end)
     end
 
-    -- Вкладка Visuals
     sectionLabel(visualsPage, T("sec_esp"))
     makeToggle(visualsPage, T("tg_esp_doors"), function() return state.espDoors end, toggleEspDoors)
     makeToggle(visualsPage, T("tg_esp_items"), function() return state.espItems end, toggleEspItems)
@@ -943,18 +920,15 @@ local function buildGui()
     makeToggle(visualsPage, T("tg_fullbright"), function() return state.fullbright end, toggleFullbright)
     makeToggle(visualsPage, T("tg_nofog"), function() return state.noFog end, toggleNoFog)
 
-    -- Вкладка Player
     sectionLabel(playerPage, T("sec_speed"))
     makeToggle(playerPage, T("tg_speed"), function() return state.speed end, toggleSpeed)
     makeSegment(playerPage, {"18", "20", "22", "25"}, function() return speedIdx end, setSpeedIdx)
 
-    -- Вкладка Auto
     sectionLabel(autoPage, T("sec_auto"))
     makeToggle(autoPage, T("tg_loot"), function() return state.autoLoot end, toggleLoot)
     makeToggle(autoPage, T("tg_instant"), function() return state.instant end, toggleInstant)
     makeToggle(autoPage, T("tg_alert"), function() return state.alert end, toggleAlert)
 
-    -- Строка статуса
     local statusRow = Instance.new("Frame")
     statusRow.Position = UDim2.new(0, CONTENT_X, 1, -14 - 26)
     statusRow.Size = UDim2.new(0, CONTENT_W, 0, 26)
@@ -989,7 +963,6 @@ local function buildGui()
         dot.BackgroundColor3 = anyOn and GOOD or MUTED
     end
 
-    -- Кружок VH, когда меню скрыто
     local circle = Instance.new("TextButton")
     circle.Size = UDim2.new(0, 52, 0, 52)
     circle.Position = main.Position
@@ -1040,7 +1013,6 @@ local function buildGui()
     windowButton("-", -76, nil, function() setGuiVisible(false) end)
     windowButton("X", -40, RED, killAll)
 
-    -- Обновление надписей
     task.spawn(function()
         while alive do
             local room = "?"
@@ -1060,7 +1032,6 @@ local function buildGui()
         end
     end)
 
-    -- Горячая клавиша
     track(UIS.InputBegan:Connect(function(input, processed)
         if processed then return end
         if input.KeyCode == Enum.KeyCode.RightShift then
